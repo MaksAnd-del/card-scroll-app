@@ -1,0 +1,116 @@
+.cardWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 496px;
+  min-height: 672px;
+  padding: 16px;
+  border-radius: 16px;
+  margin-right: 32px;
+}
+
+.cardWrapper:hover {
+  background: rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+
+.cardWrapper:last-child {
+  margin-right: 0;
+}
+
+.cardOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+}
+
+.cardDescriptionBlock {
+  width: 100%;
+  height: auto;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  color: white;
+}
+
+.cardTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.cardDescription {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.buttonBlock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.cardButton {
+  font-size: 16px;
+  border: none;
+  color: white;
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+  .cardWrapper {
+    min-width: 400;
+    min-height: 580px;
+    margin-right: 28px;
+  }
+
+  .cardDescription {
+    font-size: 14px;
+  }
+
+  .cardTitle {
+    font-size: 14px;
+  }
+
+  .cardButton {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 992px) {
+  .cardWrapper {
+    min-width: 300px;
+    min-height: 410px;
+    margin-right: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cardWrapper {
+    min-width: 200px;
+    min-height: 350px;
+    margin-right: 18px;
+  }
+
+  .cardDescription {
+    font-size: 12px;
+  }
+
+  .cardTitle {
+    font-size: 12px;
+  }
+
+  .cardButton {
+    font-size: 12px;
+  }
+}
