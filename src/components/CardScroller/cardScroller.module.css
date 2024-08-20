@@ -1,6 +1,7 @@
 .container {
   display: flex;
   padding: 0 25px;
+  margin-top: 20px;
   width: 1440px;
   overflow: hidden;
   box-sizing: border-box;
