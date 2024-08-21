@@ -1,3 +1,35 @@
+@font-face {
+  font-family: "nohemi";
+  src: url("/fonts/nohemi/Nohemi-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "nohemi";
+  src: url("/fonts/Nohemi-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "proxima";
+  src: url("/fonts/proximanova_regular.otf") format("otf");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "proxima";
+  src: url("/fonts/proximanova_bold.otf") format("otf");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --max-width: 1100px;
   --border-radius: 12px;

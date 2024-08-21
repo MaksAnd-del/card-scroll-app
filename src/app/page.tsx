@@ -10,11 +10,9 @@ export default async function HomePage() {
 
   return (
     <div className={styles.wrapper}>
-      {/* <div className={styles.container}>
-        {cards.map((card, index) => (
-          <Card key={index} card={card} />
-        ))}
-      </div> */}
+      <h1 className={styles.title}>
+        <span className={styles.bold}>Discover</span> grand venues
+      </h1>
       <CardScroller cards={cards} />
     </div>
   );

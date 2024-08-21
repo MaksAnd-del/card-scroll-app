@@ -1,61 +1,37 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ICard } from "@/sanity/lib/sanity";
-import { motion } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import { Card } from "../Card/Card";
 import styles from "./cardScroller.module.css";
 
 export function CardScroller({ cards }: { cards: ICard[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [startX, setStartX] = useState<number>(0);
-  const [scrollLeft, setScrollLeft] = useState<number>(0);
+  const [constraints, setConstraints] = useState({ left: 0, right: 0 });
 
-  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
     if (containerRef.current) {
-      setIsDragging(true);
-      setStartX(e.pageX - containerRef.current.offsetLeft);
-      setScrollLeft(containerRef.current.scrollLeft);
+      const containerWidth = containerRef.current.offsetWidth;
+      const scrollWidth = containerRef.current.scrollWidth;
+      setConstraints({
+        left: -(scrollWidth - containerWidth),
+        right: 0,
+      });
     }
-  };
-
-  const onMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const onMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !containerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - containerRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    containerRef.current.scrollLeft = scrollLeft - walk;
-  };
+  }, [cards]);
 
   return (
-    <motion.div
-      className={styles.container}
-      onMouseDown={onMouseDown}
-      onMouseLeave={onMouseLeave}
-      onMouseUp={onMouseUp}
-      onMouseMove={onMouseMove}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.1 }}
-    >
+    <motion.div className={styles.containerWrapper}>
       <motion.div
         className={styles.container}
         ref={containerRef}
         drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
+        dragConstraints={constraints}
         whileTap={{ cursor: "grabbing" }}
         initial={{ x: 0 }}
         animate={{ x: 0 }}
-        transition={{ type: "spring", stiffness: 300 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {cards.map((card, index) => (
           <Card key={index} card={card} />
