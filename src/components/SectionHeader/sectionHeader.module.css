@@ -1,0 +1,26 @@
+.title {
+  font-family: "nohemi", sans-serif;
+  font-weight: 500;
+  font-size: 72px;
+  margin-top: 20px;
+  margin-bottom: 48px;
+  padding: 0 24px;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+@media (max-width: 834px) {
+  .title {
+    font-size: 60px;
+    margin-bottom: 32px;
+  }
+}
+
+@media (max-width: 375px) {
+  .title {
+    font-size: 48px;
+    margin-bottom: 24px;
+  }
+}

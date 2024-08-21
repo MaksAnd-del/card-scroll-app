@@ -1,6 +1,7 @@
 import { ICard } from "@/sanity/lib/sanity";
 import styles from "./card.module.css";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 interface ICardProps {
   card: ICard;
@@ -8,10 +9,13 @@ interface ICardProps {
 
 export const Card = ({ card }: ICardProps) => {
   const { title, description, imageUrl } = card;
+
   return (
-    <div
+    <motion.div
       className={styles.cardWrapper}
-      style={{ backgroundImage: `url(${imageUrl})` }}
+      style={{ backgroundImage: `url(${imageUrl})`, scrollSnapAlign: "start" }}
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       <div className={styles.cardDescriptionBlock}>
         <h2 className={styles.cardTitle}>{title}</h2>
@@ -26,6 +30,6 @@ export const Card = ({ card }: ICardProps) => {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

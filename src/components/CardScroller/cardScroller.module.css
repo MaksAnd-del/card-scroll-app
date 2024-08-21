@@ -1,16 +1,49 @@
 .containerWrapper {
-  overflow: hidden;
+  position: relative;
   width: 100%;
+  max-height: 672px;
   padding: 0 25px;
   margin-top: 20px;
   box-sizing: border-box;
-  cursor: grab;
-}
-
-.containerWrapper:active {
-  cursor: grabbing;
 }
 
 .container {
   display: flex;
+}
+
+.arrow {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: #333;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1px solid white;
+  padding: 5px 8px;
+  border-radius: 50%;
+  z-index: 1;
+  user-select: none;
+  pointer-events: all;
+}
+
+.arrowIcon {
+  display: block;
+  font-size: 30px;
+  color: white;
+  padding-bottom: 5px;
+}
+
+.indicatorContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.indicator {
+  margin-right: 4px;
+}
+
+@media (max-width: 375px) {
+  .indicatorContainer {
+    margin-top: 24px;
+  }
 }
