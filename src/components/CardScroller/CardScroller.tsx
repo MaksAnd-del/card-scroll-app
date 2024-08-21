@@ -81,7 +81,6 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
     const arrowRect = arrowRef.current?.getBoundingClientRect();
     const mouseX = e.clientX;
     const mouseY = e.clientY;
-    console.log("arrowRect", arrowRect);
 
     setCursorPosition({ x: mouseX, y: mouseY });
 
