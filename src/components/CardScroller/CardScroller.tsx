@@ -189,7 +189,7 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
                   src={
                     index === activeIndex
                       ? "/icons/active-indicator.svg"
-                      : "/icons/indicator.svg"
+                      : "/icons/not-active-indicator.svg"
                   }
                   alt="indicator"
                   width={index === activeIndex ? 48 : 20}
