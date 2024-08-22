@@ -163,10 +163,24 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
         newScrollPosition = currentScrollPosition + cardWidth;
       }
 
-      containerRef.current?.scrollTo({
-        left: newScrollPosition,
-        behavior: "smooth",
-      });
+      const startTime = performance.now();
+
+      function animateScroll(timestamp: number) {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / 300, 1);
+
+        containerRef.current?.scrollTo({
+          left:
+            currentScrollPosition +
+            progress * (newScrollPosition - currentScrollPosition),
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(animateScroll);
+        }
+      }
+
+      requestAnimationFrame(animateScroll);
     }
   }, []);
 
