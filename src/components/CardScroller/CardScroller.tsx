@@ -7,20 +7,24 @@ import { Card } from "../Card/Card";
 import Image from "next/image";
 import styles from "./cardScroller.module.css";
 
-const TABLET_WIDTH = 834;
+const TABLET_WIDTH = 1024;
 
 export function CardScroller({ cards }: { cards: ICard[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const arrowRef = useRef<HTMLDivElement | null>(null);
-  const [constraints, setConstraints] = useState({ left: 0, right: 0 });
   const [hoverPosition, setHoverPosition] = useState<"left" | "right" | null>(
     null,
   );
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [cursorPosition, setCursorPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>({ x: 0, y: 0 });
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [visibleCards, setVisibleCards] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+  const [isArrowOverButton, setIsArrowOverButton] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,17 +51,6 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
   }, [cards]);
 
   useEffect(() => {
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.offsetWidth;
-      const scrollWidth = containerRef.current.scrollWidth;
-      setConstraints({
-        left: -(scrollWidth - containerWidth),
-        right: 0,
-      });
-    }
-  }, [cards]);
-
-  useEffect(() => {
     const handleScroll = () => {
       if (containerRef.current) {
         const scrollLeft = containerRef.current.scrollLeft;
@@ -75,10 +68,7 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
     };
   }, [cards]);
 
-  useEffect(() => {}, []);
-
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const arrowRect = arrowRef.current?.getBoundingClientRect();
     const mouseX = e.clientX;
     const mouseY = e.clientY;
 
@@ -90,34 +80,72 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
       setHoverPosition("right");
     }
 
-    if (
-      (arrowRect && arrowRect?.top < 100) ||
-      (arrowRect && arrowRect.top > 800)
-    ) {
-      setCursorPosition({ x: 0, y: 0 });
-    }
+    const arrowRect = arrowRef.current?.getBoundingClientRect();
+    checkIfArrowOverCard(arrowRect);
   };
 
   const handleMouseLeave = () => {
     setHoverPosition(null);
+    setHoveredCardIndex(null);
+    setIsArrowOverButton(false);
+    setCursorPosition(null);
+  };
+
+  const checkIfArrowOverCard = (arrowRect: DOMRect | undefined) => {
+    if (!arrowRect || !containerRef.current) return;
+
+    const cardElements = containerRef.current.children;
+
+    for (let i = 0; i < cardElements.length; i++) {
+      const cardElement = cardElements[i] as HTMLElement;
+      const cardRect = cardElement.getBoundingClientRect();
+
+      const button = cardElement.querySelector("button");
+      const buttonRect = button?.getBoundingClientRect();
+
+      if (
+        buttonRect &&
+        arrowRect.right > buttonRect.left &&
+        arrowRect.left < buttonRect.right &&
+        arrowRect.bottom > buttonRect.top &&
+        arrowRect.top < buttonRect.bottom
+      ) {
+        setIsArrowOverButton(true);
+        return;
+      } else if (
+        arrowRect.right > cardRect.left &&
+        arrowRect.left < cardRect.right &&
+        arrowRect.bottom > cardRect.top &&
+        arrowRect.top < cardRect.bottom
+      ) {
+        setHoveredCardIndex(i);
+        setIsArrowOverButton(false);
+      }
+    }
+
+    setHoveredCardIndex(null);
+    setIsArrowOverButton(false);
   };
 
   const scrollCards = (direction: "left" | "right") => {
     if (containerRef.current) {
-      const scrollAmount = containerRef.current.offsetWidth / 2;
-      const currentScroll = containerRef.current.scrollLeft;
+      const cardWidth = containerRef.current.children[0].clientWidth;
+
+      const currentScrollPosition = containerRef.current.scrollLeft;
+      let newScrollPosition = currentScrollPosition;
 
       if (direction === "left") {
-        containerRef.current.scrollTo({
-          left: currentScroll - scrollAmount,
-          behavior: "smooth",
-        });
+        newScrollPosition = currentScrollPosition - cardWidth;
       } else {
-        containerRef.current.scrollTo({
-          left: currentScroll + scrollAmount,
+        newScrollPosition = currentScrollPosition + cardWidth;
+      }
+
+      setTimeout(() => {
+        containerRef.current?.scrollTo({
+          left: newScrollPosition,
           behavior: "smooth",
         });
-      }
+      }, 100);
     }
   };
 
@@ -139,32 +167,33 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        {hoverPosition && isLargeScreen && (
-          <motion.div
-            ref={arrowRef}
-            className={`${styles.arrow} ${
-              hoverPosition === "left" ? styles.leftArrow : styles.rightArrow
-            }`}
-            style={{
-              top: cursorPosition.y,
-              left: cursorPosition.x,
-            }}
-            onClick={() => scrollCards(hoverPosition)}
-          >
-            <span className={styles.arrowIcon}>
-              {hoverPosition === "left" ? "←" : "→"}
-            </span>
-          </motion.div>
-        )}
+        {hoverPosition &&
+          isLargeScreen &&
+          !isArrowOverButton &&
+          cursorPosition && (
+            <motion.div
+              ref={arrowRef}
+              className={styles.arrow}
+              initial={false}
+              animate={{
+                x: (cursorPosition?.x ?? 0) - 50,
+                y: (cursorPosition?.y ?? 0) - 165,
+                transition: { type: "spring", stiffness: 100, damping: 20 },
+              }}
+              onClick={() => scrollCards(hoverPosition)}
+            >
+              <span className={styles.arrowIcon}>
+                {hoverPosition === "left" ? "←" : "→"}
+              </span>
+            </motion.div>
+          )}
 
         <motion.div
           className={styles.container}
           ref={containerRef}
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          drag={isLargeScreen ? "x" : false}
-          dragConstraints={constraints}
+          transition={{ duration: 0.8, ease: "easeOut", fps: 60 }}
           style={{
             overflowX: "scroll",
             scrollbarWidth: "none",
@@ -173,7 +202,18 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
           }}
         >
           {cards.map((card, index) => (
-            <Card key={index} card={card} />
+            <div
+              key={index}
+              className={`${styles.cardContainer} ${
+                hoveredCardIndex === index ? styles.hoveredCard : ""
+              }`}
+            >
+              <Card
+                key={index}
+                card={card}
+                setIsArrowOverButton={setIsArrowOverButton}
+              />
+            </div>
           ))}
         </motion.div>
 

@@ -11,14 +11,14 @@
   font-weight: 700;
 }
 
-@media (max-width: 834px) {
+@media (max-width: 1024px) {
   .title {
     font-size: 60px;
     margin-bottom: 32px;
   }
 }
 
-@media (max-width: 375px) {
+@media (max-width: 768px) {
   .title {
     font-size: 48px;
     margin-bottom: 24px;
