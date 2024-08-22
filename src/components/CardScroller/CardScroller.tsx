@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ICard } from "@/sanity/lib/sanity";
 import { motion } from "framer-motion";
 import { Card } from "../Card/Card";
 import Image from "next/image";
 import styles from "./cardScroller.module.css";
+
+function debounce(fn: Function, delay: number) {
+  let timer: NodeJS.Timeout;
+  return function (...args: any) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
 
 const TABLET_WIDTH = 1024;
 
@@ -18,7 +26,7 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
   const [cursorPosition, setCursorPosition] = useState<{
     x: number;
     y: number;
-  } | null>({ x: 0, y: 0 });
+  } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [visibleCards, setVisibleCards] = useState(1);
@@ -40,9 +48,7 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
     };
 
     window.addEventListener("resize", handleResize);
-
     handleResize();
-
     setIsLoaded(true);
 
     return () => {
@@ -68,66 +74,83 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
     };
   }, [cards]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
+  const handleMouseMove = useCallback(
+    debounce((e: React.MouseEvent<HTMLDivElement>) => {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
 
-    setCursorPosition({ x: mouseX, y: mouseY });
+      const newHoverPosition =
+        mouseX < window.innerWidth / 2 ? "left" : "right";
 
-    if (mouseX < window.innerWidth / 2) {
-      setHoverPosition("left");
-    } else {
-      setHoverPosition("right");
-    }
+      if (hoverPosition !== newHoverPosition) {
+        setHoverPosition(newHoverPosition);
+      }
 
-    const arrowRect = arrowRef.current?.getBoundingClientRect();
-    checkIfArrowOverCard(arrowRect);
-  };
+      if (cursorPosition?.x !== mouseX || cursorPosition?.y !== mouseY) {
+        setCursorPosition({ x: mouseX, y: mouseY });
+      }
 
-  const handleMouseLeave = () => {
+      const arrowRect = arrowRef.current?.getBoundingClientRect();
+      checkIfArrowOverCard(arrowRect);
+    }, 50),
+    [hoverPosition, cursorPosition],
+  );
+
+  const handleMouseLeave = useCallback(() => {
     setHoverPosition(null);
     setHoveredCardIndex(null);
     setIsArrowOverButton(false);
     setCursorPosition(null);
-  };
+  }, []);
 
-  const checkIfArrowOverCard = (arrowRect: DOMRect | undefined) => {
-    if (!arrowRect || !containerRef.current) return;
+  const checkIfArrowOverCard = useCallback(
+    (arrowRect: DOMRect | undefined) => {
+      if (!arrowRect || !containerRef.current) return;
 
-    const cardElements = containerRef.current.children;
+      const cardElements = containerRef.current.children;
+      let isOverButton = false;
+      let foundHoveredCardIndex = null;
 
-    for (let i = 0; i < cardElements.length; i++) {
-      const cardElement = cardElements[i] as HTMLElement;
-      const cardRect = cardElement.getBoundingClientRect();
+      for (let i = 0; i < cardElements.length; i++) {
+        const cardElement = cardElements[i] as HTMLElement;
+        const cardRect = cardElement.getBoundingClientRect();
 
-      const button = cardElement.querySelector("button");
-      const buttonRect = button?.getBoundingClientRect();
+        const button = cardElement.querySelector("button");
+        if (button) {
+          const buttonRect = button.getBoundingClientRect();
 
-      if (
-        buttonRect &&
-        arrowRect.right > buttonRect.left &&
-        arrowRect.left < buttonRect.right &&
-        arrowRect.bottom > buttonRect.top &&
-        arrowRect.top < buttonRect.bottom
-      ) {
-        setIsArrowOverButton(true);
-        return;
-      } else if (
-        arrowRect.right > cardRect.left &&
-        arrowRect.left < cardRect.right &&
-        arrowRect.bottom > cardRect.top &&
-        arrowRect.top < cardRect.bottom
-      ) {
-        setHoveredCardIndex(i);
-        setIsArrowOverButton(false);
+          if (
+            arrowRect.right > buttonRect.left &&
+            arrowRect.left < buttonRect.right &&
+            arrowRect.bottom > buttonRect.top &&
+            arrowRect.top < buttonRect.bottom
+          ) {
+            isOverButton = true;
+          }
+        }
+
+        if (
+          arrowRect.right > cardRect.left &&
+          arrowRect.left < cardRect.right &&
+          arrowRect.bottom > cardRect.top &&
+          arrowRect.top < cardRect.bottom
+        ) {
+          foundHoveredCardIndex = i;
+        }
       }
-    }
 
-    setHoveredCardIndex(null);
-    setIsArrowOverButton(false);
-  };
+      if (isOverButton !== isArrowOverButton) {
+        setIsArrowOverButton(isOverButton);
+      }
 
-  const scrollCards = (direction: "left" | "right") => {
+      if (foundHoveredCardIndex !== hoveredCardIndex) {
+        setHoveredCardIndex(foundHoveredCardIndex);
+      }
+    },
+    [hoveredCardIndex, isArrowOverButton],
+  );
+
+  const scrollCards = useCallback((direction: "left" | "right") => {
     if (containerRef.current) {
       const cardWidth = containerRef.current.children[0].clientWidth;
 
@@ -140,25 +163,26 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
         newScrollPosition = currentScrollPosition + cardWidth;
       }
 
-      setTimeout(() => {
-        containerRef.current?.scrollTo({
-          left: newScrollPosition,
-          behavior: "smooth",
-        });
-      }, 100);
-    }
-  };
-
-  const scrollToCard = (index: number) => {
-    if (containerRef.current) {
-      const cardWidth = containerRef.current.scrollWidth / cards.length;
-      const targetScroll = cardWidth * index;
-      containerRef.current.scrollTo({
-        left: targetScroll,
+      containerRef.current?.scrollTo({
+        left: newScrollPosition,
         behavior: "smooth",
       });
     }
-  };
+  }, []);
+
+  const scrollToCard = useCallback(
+    (index: number) => {
+      if (containerRef.current) {
+        const cardWidth = containerRef.current.scrollWidth / cards.length;
+        const targetScroll = cardWidth * index;
+        containerRef.current.scrollTo({
+          left: targetScroll,
+          behavior: "smooth",
+        });
+      }
+    },
+    [cards.length],
+  );
 
   return (
     <>
@@ -167,26 +191,23 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        {hoverPosition &&
-          isLargeScreen &&
-          !isArrowOverButton &&
-          cursorPosition && (
-            <motion.div
-              ref={arrowRef}
-              className={styles.arrow}
-              initial={false}
-              animate={{
-                x: (cursorPosition?.x ?? 0) - 50,
-                y: (cursorPosition?.y ?? 0) - 165,
-                transition: { type: "spring", stiffness: 100, damping: 20 },
-              }}
-              onClick={() => scrollCards(hoverPosition)}
-            >
-              <span className={styles.arrowIcon}>
-                {hoverPosition === "left" ? "←" : "→"}
-              </span>
-            </motion.div>
-          )}
+        {hoverPosition && isLargeScreen && !isArrowOverButton && (
+          <motion.div
+            ref={arrowRef}
+            className={styles.arrow}
+            initial={false}
+            animate={{
+              x: (cursorPosition?.x ?? 0) - 50,
+              y: (cursorPosition?.y ?? 0) - 165,
+              transition: { type: "spring", stiffness: 100, damping: 20 },
+            }}
+            onClick={() => scrollCards(hoverPosition)}
+          >
+            <span className={styles.arrowIcon}>
+              {hoverPosition === "left" ? "←" : "→"}
+            </span>
+          </motion.div>
+        )}
 
         <motion.div
           className={styles.container}
@@ -211,7 +232,7 @@ export function CardScroller({ cards }: { cards: ICard[] }) {
               <Card
                 key={index}
                 card={card}
-                setIsArrowOverButton={setIsArrowOverButton}
+                handleMouseLeave={handleMouseLeave}
               />
             </div>
           ))}

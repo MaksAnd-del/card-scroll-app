@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 
 interface ICardProps {
   card: ICard;
-  setIsArrowOverButton: (value: boolean) => void;
+  handleMouseLeave: () => void;
 }
 
-export const Card = ({ card, setIsArrowOverButton }: ICardProps) => {
+export const Card = ({ card, handleMouseLeave }: ICardProps) => {
   const { title, description, imageUrl } = card;
 
   return (
@@ -21,10 +21,7 @@ export const Card = ({ card, setIsArrowOverButton }: ICardProps) => {
       <div className={styles.cardDescriptionBlock}>
         <h2 className={styles.cardTitle}>{title}</h2>
         <p className={styles.cardDescription}>{description}</p>
-        <div
-          className={styles.buttonBlock}
-          onMouseLeave={() => setIsArrowOverButton(false)}
-        >
+        <div className={styles.buttonBlock} onMouseLeave={handleMouseLeave}>
           <button className={styles.cardButton}>Discover</button>
           <Image
             src="/icons/icon-right.svg"

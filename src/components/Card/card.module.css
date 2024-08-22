@@ -18,7 +18,7 @@
 .cardDescriptionBlock {
   width: 360px;
   height: auto;
-  padding: 24px;
+  padding: 24px 24px 0 24px;
   color: white;
   border-radius: 8px;
   border: 1px rgba(65, 65, 65, 0.2);
@@ -42,10 +42,11 @@
   font-weight: 500;
   line-height: 22px;
   letter-spacing: 0.5px;
-  margin-bottom: 16px;
 }
 
 .buttonBlock {
+  width: fit-content;
+  padding: 24px 0;
   display: flex;
   align-items: center;
   gap: 8px;
